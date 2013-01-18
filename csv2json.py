@@ -43,6 +43,8 @@ def csv2json(csv_file, directory, column, delimiter=',', quotechar='"', **csv_op
         delimiter = delimiter_map.get(delimiter)
     reader = csv.DictReader(csv_file, delimiter=delimiter, quotechar=quotechar or None, **csv_opts)
 
+    years = {}
+
     # manually cast to integer or float according values for a lighter json
     # csv.DictReader has no mean to return unquoted integer and float values,
     # that's why it's manually done here. None really efficient upon script
@@ -61,6 +63,15 @@ def csv2json(csv_file, directory, column, delimiter=',', quotechar='"', **csv_op
 
         columns[row[column]].append(row)
 
+        # also, build catalog_year_diseases.json content
+        if not row['y'] in years:
+            years[row['y']] = {
+                "n": row['y'],
+                "t": row['y'],
+                "d": []
+            }
+        if not row['d'] in years[row['y']]['d']:
+            years[row['y']]['d'].append(row['d'])
 
     # produce 1 json file per unique field value
     for key in columns:
@@ -73,6 +84,18 @@ def csv2json(csv_file, directory, column, delimiter=',', quotechar='"', **csv_op
         fo = open(outfile, "wb")
         fo.write(out.getvalue())
         fo.close()
+
+    # produce catalog_year_diseases.json
+    yearsArray = []
+    for year in years:
+        yearsArray.append(years[year])
+    yearfile = directory+"/catalog_year_diseases.json"
+    print("Generating: " + yearfile)
+    out = StringIO()
+    json.dump(yearsArray, out, indent=None, separators=(',', ':'))
+    fo = open(yearfile, "wb")
+    fo.write(out.getvalue())
+    fo.close()
 
     return "done"
 
