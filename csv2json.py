@@ -87,7 +87,7 @@ def csv2json(csv_file, directory, column, delimiter=',', quotechar='"', **csv_op
 
     # produce catalog_year_diseases.json
     yearsArray = []
-    for year in years:
+    for year in sorted(years.keys()):
         yearsArray.append(years[year])
     yearfile = directory+"/catalog_year_diseases.json"
     print("Generating: " + yearfile)
