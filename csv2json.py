@@ -71,16 +71,27 @@ def csv2json(csv_file, delimiter=',', quotechar='"', callback=None, variable=Non
             limitations[key]['d'] = disease
             limitations[key]['n'] = diseaseName
             limitations[key]['y'] = []
+            limitations[key]['minYear'] = year
 
         if not year in limitations[key]['y']:
             limitations[key]['y'].append(year)
 
-    # create clean rows, with sorted values (and sorted by disease name)
-    rows = []
+        if year < limitations[key]['minYear']:
+            limitations[key]['minYear'] = year
+
+    # create clean rows, with sorted values, and sorted by disease name in
+    # in addition to having the limitations with lowest year returned first
+    temp = {}
     for key in sorted(limitations.keys(), reverse=False):
         limitations[key]['y'] = sorted(limitations[key]['y'])
-        rows.append(limitations[key])
+        newKey = limitations[key]['n'] + '___' + \
+            str(limitations[key]['minYear'])
+        temp[newKey] = limitations[key]
+    rows = []
+    for key in sorted(temp.keys(), reverse=False):
+        rows.append(temp[key])
 
+    # output result
     out = StringIO()
     if callback:
         out.write('%s(' % callback);
