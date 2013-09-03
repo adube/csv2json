@@ -38,18 +38,17 @@ def is_int(s):
     except ValueError:
         return False
 
-def csv2json(csv_file, directory, column, delimiter=',', quotechar='"', **csv_opts):
+def csv2json(csv_file, delimiter=',', quotechar='"', callback=None, variable=None, **csv_opts):
     if delimiter_map.has_key(delimiter):
         delimiter = delimiter_map.get(delimiter)
     reader = csv.DictReader(csv_file, delimiter=delimiter, quotechar=quotechar or None, **csv_opts)
 
-    years = {}
+    limitations = {}
 
     # manually cast to integer or float according values for a lighter json
     # csv.DictReader has no mean to return unquoted integer and float values,
     # that's why it's manually done here. None really efficient upon script
     # execution, but json is much lighter that way
-    columns = {}
     for row in reader:
         for field in row:
             if is_number(row[field]):
@@ -57,46 +56,43 @@ def csv2json(csv_file, directory, column, delimiter=',', quotechar='"', **csv_op
                     row[field] = int(row[field])
                 else:
                     row[field] = float(row[field])
+
+        year = row['y']
+        disease = row['d']
+        limitation = row['l']
+        diseaseName = row['n']
         
-        if not row[column] in columns:
-            columns[row[column]] = []
+        limitation = limitation.replace(str(year), '{{{YEAR}}}', 1)
+        key = diseaseName + '___' + limitation + '___' + str(disease)
 
-        columns[row[column]].append(row)
+        if not key in limitations:
+            limitations[key] = {}
+            limitations[key]['l'] = limitation
+            limitations[key]['d'] = disease
+            limitations[key]['n'] = diseaseName
+            limitations[key]['y'] = []
 
-        # also, build catalog_year_diseases.json content
-        if not row['y'] in years:
-            years[row['y']] = {
-                "n": row['y'],
-                "d": []
-            }
-        if not row['d'] in years[row['y']]['d']:
-            years[row['y']]['d'].append(row['d'])
+        if not year in limitations[key]['y']:
+            limitations[key]['y'].append(year)
 
-    # produce 1 json file per unique field value
-    for key in columns:
-        rows = columns[key]
-        outfile = directory+"/"+str(key)+".json"
-        print("Generating: " + outfile)
+    # create clean rows, with sorted values (and sorted by disease name)
+    rows = []
+    for key in sorted(limitations.keys(), reverse=False):
+        limitations[key]['y'] = sorted(limitations[key]['y'])
+        rows.append(limitations[key])
 
-        out = StringIO()
-        json.dump(rows, out, indent=None, separators=(',', ':'))
-        fo = open(outfile, "wb")
-        fo.write(out.getvalue())
-        fo.close()
-
-    # produce catalog_year_diseases.json
-    yearsArray = []
-    for year in sorted(years.keys(), reverse=True):
-        yearsArray.append(years[year])
-    yearfile = directory+"/catalog_year_diseases.json"
-    print("Generating: " + yearfile)
     out = StringIO()
-    json.dump(yearsArray, out, indent=None, separators=(',', ':'))
-    fo = open(yearfile, "wb")
-    fo.write(out.getvalue())
-    fo.close()
+    if callback:
+        out.write('%s(' % callback);
+    elif variable:
+        out.write('var %s = ' % variable)
+    json.dump(rows, out, indent=None, separators=(',', ':'))
+    if callback:
+        out.write(');');
+    elif variable:
+        out.write(';')
+    return out.getvalue()
 
-    return "done"
 
 if __name__ == '__main__':
     import sys
@@ -116,15 +112,8 @@ if __name__ == '__main__':
                       help='If provided, the output becomes a JavaScript statement'
                       ' which assigns the JSON structure to a variable of the same'
                       ' name.')
-    parser.add_option('-D', '--directory', dest='od', default='.',
-                      help='The destination directory where to save the json files')
-    parser.add_option('-C', '--column', dest='cc', default=None,
-                      help='The column used to explode the records in multiple files')
 
     options, args = parser.parse_args()
-
-    if not os.path.exists(options.od):
-        os.makedirs(options.od)
 
     close = False
     if len(args) > 0 and args[0] != '-':
@@ -132,6 +121,6 @@ if __name__ == '__main__':
         close = True
     else:
         csv_file = sys.stdin
-    print csv2json(csv_file, options.od, options.cc, options.fs, options.fq)
+    print csv2json(csv_file, options.fs, options.fq, options.callback, options.var)
     if close:
         csv_file.close()
