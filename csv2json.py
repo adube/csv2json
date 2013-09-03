@@ -67,7 +67,6 @@ def csv2json(csv_file, directory, column, delimiter=',', quotechar='"', **csv_op
         if not row['y'] in years:
             years[row['y']] = {
                 "n": row['y'],
-                "t": row['y'],
                 "d": []
             }
         if not row['d'] in years[row['y']]['d']:
@@ -87,7 +86,7 @@ def csv2json(csv_file, directory, column, delimiter=',', quotechar='"', **csv_op
 
     # produce catalog_year_diseases.json
     yearsArray = []
-    for year in sorted(years.keys()):
+    for year in sorted(years.keys(), reverse=True):
         yearsArray.append(years[year])
     yearfile = directory+"/catalog_year_diseases.json"
     print("Generating: " + yearfile)
