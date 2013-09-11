@@ -85,7 +85,7 @@ def csv2json(csv_file, delimiter=',', quotechar='"', callback=None, variable=Non
     for key in sorted(limitations.keys(), reverse=False):
         limitations[key]['y'] = sorted(limitations[key]['y'])
         newKey = limitations[key]['n'] + '___' + \
-            str(limitations[key]['minYear'])
+            str(limitations[key]['minYear']) + str(key)
         temp[newKey] = limitations[key]
     rows = []
     for key in sorted(temp.keys(), reverse=False):
