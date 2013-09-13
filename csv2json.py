@@ -1,4 +1,5 @@
 #!/usr/local/bin/python
+# -*- coding: utf-8 -*-
 """
 A simple script for generating multiple JSON/JavaScript from comma-separated (or
 otherwise delimited) values. A specified column from the input file must be
@@ -59,7 +60,7 @@ def csv2json(csv_file, delimiter=',', quotechar='"', callback=None, variable=Non
 
         year = row['y']
         disease = row['d']
-        limitation = row['l']
+        limitation = row['l'].replace('”', '"')
         diseaseName = row['n']
         
         limitation = limitation.replace(str(year), '{{{YEAR}}}', 1)
