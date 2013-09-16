@@ -67,10 +67,16 @@ def csv2json(csv_file, directory, column, delimiter=',', quotechar='"', **csv_op
         if not row['y'] in years:
             years[row['y']] = {
                 "n": row['y'],
-                "d": []
+                "d": [],
+                "w": []
             }
+        # 1st - append disease to years if any record is found
         if not row['d'] in years[row['y']]['d']:
             years[row['y']]['d'].append(row['d'])
+        # 2nd - append disease to years if any record not of "all" age group is
+        #       found
+        if row.has_key('a') and not row['d'] in years[row['y']]['w'] and row['a'] != 1:
+            years[row['y']]['w'].append(row['d'])
 
     # produce 1 json file per unique field value
     for key in columns:
