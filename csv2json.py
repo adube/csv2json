@@ -63,7 +63,7 @@ def csv2json(csv_file, delimiter=',', quotechar='"', callback=None, variable=Non
         limitation = row['l'].replace('”', '"')
         diseaseName = row['n']
         
-        limitation = limitation.replace(str(year), '{{{YEAR}}}', 1)
+        limitation = limitation.replace(str(year), '{{{YEAR}}}', 1).strip()
         key = diseaseName + '___' + limitation + '___' + str(disease)
 
         if not key in limitations:
